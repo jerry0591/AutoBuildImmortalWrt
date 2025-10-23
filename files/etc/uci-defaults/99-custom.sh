@@ -14,13 +14,6 @@ uci set system.@system[0].hostname='FastnetOS'
 uci commit system
 echo "Hostname set to FastnetOS" >>$LOGFILE
 
-# 设置默认 root 密码为 admin123（加密写入）
-if command -v chpasswd >/dev/null 2>&1; then
-    echo "root:admin123" | chpasswd
-else
-    sed -i "s|^root:[^:]*:|root:\$6\$Tqj5lC6F\$zZxvmsoFZcKa1xFctQ1yAd1iqE/g7vK6EXB1kQ8smLwBBfBdFTGvPSiqWj0gAF6x6ibYzZ1fdd/gyHqZbDjqA/:|" /etc/shadow
-fi
-
 
 
 # ===============================
