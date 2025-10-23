@@ -309,5 +309,9 @@ cat > /etc/banner <<'EOF'
  -----------------------------------------------------
 EOF
 
+# 修改 dns、ping、route
+sed -i "s|option dns 'immortalwrt.org'|option dns 'tiktok.com'|" "$LUCICONF"
+sed -i "s|option ping 'immortalwrt.org'|option ping 'baidu.com'|" "$LUCICONF"
+sed -i "s|option route 'immortalwrt.org'|option route 'tiktok.com'|" "$LUCICONF"
 
 exit 0
