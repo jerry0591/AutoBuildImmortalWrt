@@ -13,7 +13,8 @@ uci set firewall.@zone[1].input='ACCEPT'
 uci set system.@system[0].hostname='FastnetOS'
 uci commit system
 echo "Hostname set to FastnetOS" >>$LOGFILE
-
+# 修改默认密码admin123
+sed -i 's|^root:[^:]*:|root:$1$aJagm5zW$w9H7NvLdbx79MoJNk8Gnh/:|' /etc/shadow
 
 
 # ===============================
