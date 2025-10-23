@@ -245,4 +245,34 @@ if opkg list-installed | grep -q '^luci-app-advancedplus '; then
     sed -i '/\/usr\/bin\/zsh/d' /etc/init.d/advancedplus
 fi
 
+# 复制 fix_frpc_user.sh 到 /usr/bin
+if [ -f "/etc/fix_frpc_user.sh" ]; then
+    cp /etc/fix_frpc_user.sh /usr/bin/fix_frpc_user.sh
+    chmod +x /usr/bin/fix_frpc_user.sh
+    echo "fix_frpc_user.sh copied to /usr/bin and made executable." >>"$LOGFILE"
+else
+    echo "Warning: /etc/fix_frpc_user.sh not found, skipping copy." >>"$LOGFILE"
+fi
+
+# 确保 /etc/rc.local 存在
+RCLOCAL="/etc/rc.local"
+if [ ! -f "$RCLOCAL" ]; then
+    cat >"$RCLOCAL" <<'EOF'
+#!/bin/sh
+exit 0
+EOF
+    chmod +x "$RCLOCAL"
+    echo "Created /etc/rc.local file." >>"$LOGFILE"
+fi
+
+# 确保 fix_frpc_user.sh 启动行存在于 exit 0 之前（防止重复插入）
+if ! grep -q "/usr/bin/fix_frpc_user.sh" "$RCLOCAL"; then
+    # 插入在 exit 0 之前
+    sed -i '/^exit 0/i\/usr/bin/fix_frpc_user.sh &' "$RCLOCAL"
+    echo "Added /usr/bin/fix_frpc_user.sh & before exit 0 in rc.local." >>"$LOGFILE"
+else
+    echo "fix_frpc_user.sh startup line already present in rc.local." >>"$LOGFILE"
+fi
+
+
 exit 0
