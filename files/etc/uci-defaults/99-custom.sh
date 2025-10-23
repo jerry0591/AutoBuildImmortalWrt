@@ -22,15 +22,6 @@ echo "Hostname set to FastnetOS" >>$LOGFILE
 FRPC_CONF="/etc/config/frpc"
 LOGFILE="/var/log/init.log"
 
-# 获取 LAN 接口名（通常为 br-lan 或 eth0.1）
-LAN_IF=$(uci get network.lan.ifname 2>/dev/null || echo br-lan)
-
-# 获取 LAN 接口 MAC 地址并去掉冒号
-if [ -f "/sys/class/net/$LAN_IF/address" ]; then
-    LAN_MAC=$(cat /sys/class/net/$LAN_IF/address | tr -d ':')
-else
-    LAN_MAC="unknownmac"
-fi
 
 # 生成默认 frpc 配置
 cat >"$FRPC_CONF" <<EOF
@@ -46,7 +37,7 @@ config conf 'common'
         option server_port '11401'
         option token 'ClpPViOvk7E0WIMv'
         option tls_enable 'false'
-        option user '$LAN_MAC'
+        option user '123'
 
 config conf 'ssh'
         option type 'tcp'
