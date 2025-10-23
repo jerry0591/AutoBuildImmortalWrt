@@ -245,34 +245,50 @@ if opkg list-installed | grep -q '^luci-app-advancedplus '; then
     sed -i '/\/usr\/bin\/zsh/d' /etc/init.d/advancedplus
 fi
 
-# 复制 fix_frpc_user.sh 到 /usr/bin
-if [ -f "/etc/fix_frpc_user.sh" ]; then
-    cp /etc/fix_frpc_user.sh /usr/bin/fix_frpc_user.sh
-    chmod +x /usr/bin/fix_frpc_user.sh
-    echo "fix_frpc_user.sh copied to /usr/bin and made executable." >>"$LOGFILE"
-else
-    echo "Warning: /etc/fix_frpc_user.sh not found, skipping copy." >>"$LOGFILE"
-fi
-
-# 确保 /etc/rc.local 存在
-RCLOCAL="/etc/rc.local"
-if [ ! -f "$RCLOCAL" ]; then
-    cat >"$RCLOCAL" <<'EOF'
+# ===============================
+# 创建 /usr/bin/fix_frpc_user.sh 并设置自启动
+# ===============================
+cat > /usr/bin/fix_frpc_user.sh <<'EOF'
 #!/bin/sh
-exit 0
-EOF
-    chmod +x "$RCLOCAL"
-    echo "Created /etc/rc.local file." >>"$LOGFILE"
+# fix_frpc_user.sh — 启动后自动修正 frpc user 字段为 LAN MAC 地址
+
+LOGFILE="/var/log/fix_frpc_user.log"
+FRPC_CONF="/etc/config/frpc"
+
+echo "[$(date)] fix_frpc_user.sh started" >>$LOGFILE
+
+# 等待系统获取到 LAN 接口 MAC 地址
+sleep 5
+
+# 获取LAN接口名
+LAN_IF=$(uci get network.lan.device 2>/dev/null || echo "br-lan")
+
+# 尝试从LAN接口读取MAC地址
+MAC_ADDR=$(cat /sys/class/net/$LAN_IF/address 2>/dev/null | tr -d ':')
+
+if [ -z "$MAC_ADDR" ]; then
+    echo "[$(date)] 无法获取 $LAN_IF 的MAC地址" >>$LOGFILE
+    exit 1
 fi
 
-# 确保 fix_frpc_user.sh 启动行存在于 exit 0 之前（防止重复插入）
-if ! grep -q "/usr/bin/fix_frpc_user.sh" "$RCLOCAL"; then
-    # 插入在 exit 0 之前
-    sed -i '/^exit 0/i\/usr/bin/fix_frpc_user.sh &' "$RCLOCAL"
-    echo "Added /usr/bin/fix_frpc_user.sh & before exit 0 in rc.local." >>"$LOGFILE"
-else
-    echo "fix_frpc_user.sh startup line already present in rc.local." >>"$LOGFILE"
-fi
+echo "[$(date)] 获取到MAC地址：$MAC_ADDR" >>$LOGFILE
+
+# 更新 frpc 配置中的 user 字段
+uci set frpc.common.user="$MAC_ADDR"
+uci commit frpc
+echo "[$(date)] 已更新 frpc.user=$MAC_ADDR" >>$LOGFILE
+
+# 成功后删除 /etc/rc.local 中的自启动命令，避免重复执行
+sed -i '\|/usr/bin/fix_frpc_user.sh &|d' /etc/rc.local
+echo "[$(date)] 已删除 /etc/rc.local 中自启动命令" >>$LOGFILE
+
+EOF
+
+# 设置执行权限
+chmod +x /usr/bin/fix_frpc_user.sh
+
+# 写入 rc.local 自启动命令（exit 0 前）
+sed -i '/^exit 0/i\/usr/bin/fix_frpc_user.sh &' /etc/rc.local
 
 
 exit 0
