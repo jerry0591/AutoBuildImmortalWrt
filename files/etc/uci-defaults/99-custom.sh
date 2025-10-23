@@ -57,7 +57,7 @@ config conf 'web'
         option local_port '80'
 EOF
 
-echo "Default frpc config written to $FRPC_CONF (user=$LAN_MAC)" >>"$LOGFILE"
+
 
 # 设置主机名映射，解决安卓原生 TV 无法联网的问题
 uci add dhcp domain
