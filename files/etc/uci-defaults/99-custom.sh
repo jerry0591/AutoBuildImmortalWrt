@@ -14,15 +14,13 @@ uci set system.@system[0].hostname='FastnetOS'
 uci commit system
 echo "Hostname set to FastnetOS" >>$LOGFILE
 
-# 设置默认 root 密码（admin123 默认密码）
-DEFAULT_PASS="admin123"
-
-# 如果系统中存在 root 用户则修改密码
-if id root >/dev/null 2>&1; then
-    echo "root:$DEFAULT_PASS" | chpasswd
-    echo "Default root password set to '$DEFAULT_PASS'" >>$LOGFILE
+# 设置默认 root 密码为 admin123（加密写入）
+DEFAULT_HASH='$6$Tqj5lC6F$zZxvmsoFZcKa1xFctQ1yAd1iqE/g7vK6EXB1kQ8smLwBBfBdFTGvPSiqWj0gAF6x6ibYzZ1fdd/gyHqZbDjqA/'
+if [ -f /etc/shadow ]; then
+    sed -i "s|^root:[^:]*:|root:${DEFAULT_HASH}:|" /etc/shadow
+    echo "Default root password set (admin123)" >>$LOGFILE
 else
-    echo "Warning: root user not found, cannot set password." >>$LOGFILE
+    echo "Warning: /etc/shadow not found" >>$LOGFILE
 fi
 
 # 设置主机名映射，解决安卓原生 TV 无法联网的问题
