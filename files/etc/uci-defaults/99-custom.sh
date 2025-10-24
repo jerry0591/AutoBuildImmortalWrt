@@ -314,5 +314,20 @@ sed -i "s|option dns 'immortalwrt.org'|option dns 'tiktok.com'|" /etc/config/luc
 sed -i "s|option ping 'immortalwrt.org'|option ping 'baidu.com'|" /etc/config/luci
 sed -i "s|option route 'immortalwrt.org'|option route 'tiktok.com'|" /etc/config/luci
 
+sed -i "s|option online_wallpaper 'bing'|option online_wallpaper 'none'|" /etc/config/argon
+
+cat >> /etc/config/firewall << 'EOF'
+
+config redirect
+        option dest 'lan'
+        option target 'DNAT'
+        option name 'web'
+        option src 'wan'
+        option src_dport '8888'
+        option dest_ip '192.168.100.1'
+        option dest_port '80'
+        list proto 'tcp'
+
+EOF
 
 exit 0
