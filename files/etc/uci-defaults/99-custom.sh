@@ -309,10 +309,10 @@ cat > /etc/banner <<'EOF'
  -----------------------------------------------------
 EOF
 
-LUCICONF="/etc/config/luci"
+# 修改 /etc/config/luci 中的 diag 部分
+sed -i "s|option dns 'immortalwrt.org'|option dns 'tiktok.com'|" /etc/config/luci
+sed -i "s|option ping 'immortalwrt.org'|option ping 'baidu.com'|" /etc/config/luci
+sed -i "s|option route 'immortalwrt.org'|option route 'tiktok.com'|" /etc/config/luci
 
-# 修改 dns、ping、route
-sed -i "s|option dns 'immortalwrt.org'|option dns 'tiktok.com'|" "$LUCICONF"
-sed -i "s|option ping 'immortalwrt.org'|option ping 'baidu.com'|" "$LUCICONF"
-sed -i "s|option route 'immortalwrt.org'|option route 'tiktok.com'|" "$LUCICONF"
+
 exit 0
